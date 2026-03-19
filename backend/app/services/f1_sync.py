@@ -233,7 +233,13 @@ class DataSyncService:
         race.status = "completed"
         self.db.commit()
 
-        # Trigger scoring
+        # Ensure qualifying results exist before scoring (pole position points depend on them)
+        existing_qual = self.db.query(models.QualifyingResult).filter(
+            models.QualifyingResult.race_id == race.id
+        ).count()
+        if existing_qual == 0:
+            self.fetch_qualifying_results(round_num, year)
+
         from app.services.scoring import calculate_and_award_points
         calculate_and_award_points(race.id, self.db)
 

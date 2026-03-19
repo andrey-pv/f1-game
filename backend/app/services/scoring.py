@@ -63,14 +63,14 @@ def calculate_and_award_points(race_id: int, db: Session) -> None:
             if prediction.submitted_at <= early_cutoff:
                 bonus_pts += BONUS_EARLY_BIRD
 
+        old_total = prediction.total_points_earned or 0
         prediction.winner_points = winner_pts
         prediction.pole_points = pole_pts
         prediction.bonus_points = bonus_pts
         prediction.total_points_earned = winner_pts + pole_pts + bonus_pts
 
-        # Update user points
         user = prediction.user
-        user.total_points += prediction.total_points_earned
+        user.total_points = (user.total_points or 0) - old_total + prediction.total_points_earned
 
         # Update streaks
         _update_streaks(user, correct_winner, db, race_id)
