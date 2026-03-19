@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import StreakIndicator from './StreakIndicator'
+import UserPredictionsModal from './UserPredictionsModal'
 import useAuthStore from '../store/useAuthStore'
 
 const RANK_ICONS = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 export default function LeaderboardTable({ entries = [], loading }) {
   const user = useAuthStore((s) => s.user)
+  const [selectedUser, setSelectedUser] = useState(null)
 
   if (loading) {
     return (
@@ -21,6 +24,7 @@ export default function LeaderboardTable({ entries = [], loading }) {
   }
 
   return (
+    <>
     <div className="overflow-x-auto -mx-4 md:mx-0">
       <table className="w-full min-w-[520px]">
         <thead>
@@ -39,7 +43,8 @@ export default function LeaderboardTable({ entries = [], loading }) {
             return (
               <tr
                 key={entry.user_id}
-                className={`transition-colors ${isMe ? 'bg-f1-gold/5 border border-f1-gold/30 rounded-lg' : 'hover:bg-f1-mid/50'}`}
+                onClick={() => setSelectedUser(entry)}
+                className={`transition-colors cursor-pointer ${isMe ? 'bg-f1-gold/5 border border-f1-gold/30 rounded-lg' : 'hover:bg-f1-mid/50'}`}
               >
                 <td className="sticky left-0 bg-inherit px-4 py-3 font-heading font-bold text-lg">
                   {RANK_ICONS[entry.rank] || (
@@ -83,5 +88,10 @@ export default function LeaderboardTable({ entries = [], loading }) {
         </tbody>
       </table>
     </div>
+
+    {selectedUser && (
+      <UserPredictionsModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+    )}
+    </>
   )
 }

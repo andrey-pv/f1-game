@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from typing import Optional, List
 from app.database import get_db
 from app import models, schemas
@@ -12,7 +12,12 @@ router = APIRouter(prefix="/api", tags=["leaderboard"])
 
 
 def build_leaderboard(db: Session, season_year: Optional[int] = None, limit: int = 100) -> List[schemas.LeaderboardEntry]:
-    query = db.query(models.User).filter(models.User.total_points > 0)
+    query = db.query(models.User).filter(
+        or_(
+            models.User.total_points > 0,
+            models.User.predictions.any(),
+        )
+    )
 
     users = query.order_by(models.User.total_points.desc()).limit(limit).all()
     entries = []

@@ -83,6 +83,32 @@ def get_prediction_history(
     )
 
 
+@router.get("/predictions/user/{user_id}", response_model=List[schemas.PredictionOut])
+def get_user_predictions(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return (
+        db.query(models.Prediction)
+        .join(models.Race)
+        .options(
+            joinedload(models.Prediction.predicted_winner).joinedload(models.Driver.current_team),
+            joinedload(models.Prediction.predicted_pole).joinedload(models.Driver.current_team),
+            joinedload(models.Prediction.race),
+        )
+        .filter(
+            models.Prediction.user_id == user_id,
+            models.Race.status == "completed",
+        )
+        .order_by(models.Race.race_date.desc())
+        .all()
+    )
+
+
 @router.get("/predictions/{race_id}", response_model=schemas.PredictionOut)
 def get_prediction(
     race_id: int,
