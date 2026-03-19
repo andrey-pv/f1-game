@@ -56,8 +56,8 @@ def calculate_and_award_points(race_id: int, db: Session) -> None:
         if correct_pole:
             pole_pts = POINTS_CORRECT_POLE
 
-        # Early bird bonus
-        if race and race.qualifying_date:
+        # Early bird bonus (only if winner prediction is correct)
+        if correct_winner and race and race.qualifying_date:
             from datetime import timedelta
             early_cutoff = race.qualifying_date - timedelta(hours=48)
             if prediction.submitted_at <= early_cutoff:
