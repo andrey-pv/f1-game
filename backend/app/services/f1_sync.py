@@ -230,7 +230,6 @@ class DataSyncService:
             fastest = result.get("FastestLap", {})
             existing.fastest_lap = fastest.get("rank") == "1"
 
-        race.status = "completed"
         self.db.commit()
 
         # Ensure qualifying results exist before scoring (pole position points depend on them)
@@ -239,6 +238,9 @@ class DataSyncService:
         ).count()
         if existing_qual == 0:
             self.fetch_qualifying_results(round_num, year)
+
+        race.status = "completed"
+        self.db.commit()
 
         from app.services.scoring import calculate_and_award_points
         calculate_and_award_points(race.id, self.db)
@@ -294,7 +296,8 @@ class DataSyncService:
             existing.q3_time = result.get("Q3")
             existing.team_id = team.id if team else None
 
-        race.status = "racing"
+        if race.status != "completed":
+            race.status = "racing"
         self.db.commit()
 
     def sync_all(self) -> None:
